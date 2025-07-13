@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情况1：均在CRM内 - 完整流程</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .status-banner {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .status-banner .icon {
+            width: 20px;
+            height: 20px;
+            background: #2196f3;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .status-info {
+            flex: 1;
+        }
+
+        .status-info .main-text {
+            font-size: 14px;
+            color: #1565c0;
+            margin-bottom: 8px;
+        }
+
+        .status-breakdown {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 4px;
+        }
+
+        .status-item .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .dot-green { background: #28a745; }
+        .dot-red { background: #dc3545; }
+
+        .section {
+            padding: 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .quantity-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .quantity-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quantity-card.selected {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .quantity-card .number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 4px;
+        }
+
+        .quantity-card .label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .type-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .type-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .type-card.selected {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .location-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .location-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .location-card.selected {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .location-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .permission-note {
+            margin-top: 8px;
+            color: #666;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .operation-preview {
+            background: #f8fff9;
+            border: 1px solid #28a745;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .operation-preview h4 {
+            color: #155724;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .preview-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            padding: 8px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 6px;
+        }
+
+        .preview-item.success {
+            color: #155724;
+        }
+
+        .preview-item.error {
+            color: #721c24;
+        }
+
+        .async-notice {
+            background: #e8f4fd;
+            border: 1px solid #4fc3f7;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #0277bd;
+            display: none;
+        }
+
+        .async-notice.show {
+            display: block;
+        }
+
+        .async-notice h5 {
+            color: #01579b;
+            margin-bottom: 8px;
+        }
+
+        .time-estimate {
+            background: #fff3e0;
+            border: 1px solid #ffb74d;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #ef6c00;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e9ecef;
+            margin: 20px 0;
+        }
+
+        .tag-section {
+            background: #fff8e1;
+            border: 1px solid #ffb74d;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .tag-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .tag-count {
+            font-size: 14px;
+            color: #e65100;
+            font-weight: 600;
+        }
+
+        .tag-input-area {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 8px;
+            background: white;
+            min-height: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tag .remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .add-tag-btn {
+            background: #f0f0f0;
+            border: 1px dashed #ccc;
+            color: #666;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-tag-btn:hover {
+            background: #e0e0e0;
+            border-color: #999;
+        }
+
+        .tag-guide {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .tag-guide a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .tag-guide a:hover {
+            text-decoration: underline;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 20px 24px;
+            background: #f8f9fa;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        /* 任务创建弹窗 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #e5e5e5;
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .warning-banner {
+            background: #fff8e1;
+            border: 1px solid #ffb74d;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .warning-icon {
+            width: 20px;
+            height: 20px;
+            background: #ff9800;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .info-card h4 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-card .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #007bff;
+        }
+
+        .conditions-preview {
+            background: #e8f5e8;
+            border: 1px solid #28a745;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .conditions-preview h4 {
+            color: #155724;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .condition-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .condition-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 16px 24px 24px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        /* 结果展示弹窗 */
+        .result-modal .modal-content {
+            max-width: 500px;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+        }
+
+        .result-icon.success {
+            background: #28a745;
+        }
+
+        .result-icon.partial {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .result-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .result-summary {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .result-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .result-item-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .error-details {
+            background: #fff5f5;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .error-details h5 {
+            color: #dc2626;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .error-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 13px;
+            color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>添加到CRM</h1>
+            <div class="status-banner">
+                <div class="icon">i</div>
+                <div class="status-info">
+                    <div class="main-text">您选择的主体均已在CRM内</div>
+                    <div class="status-breakdown">
+                        <div class="status-item">
+                            <div class="dot dot-green"></div>
+                            <span>可领取：<span id="claimable-count">450个</span></span>
+                        </div>
+                        <div class="status-item">
+                            <div class="dot dot-red"></div>
+                            <span>私海无权限：<span id="no-permission-count">50个</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 领取线索部分 -->
+        <div class="section">
+            <h2 class="section-title">📥 领取线索操作</h2>
+            
+            <div class="quantity-cards">
+                <div class="quantity-card" data-quantity="50">
+                    <div class="number">50</div>
+                    <div class="label">当前选中的主体</div>
+                </div>
+                <div class="quantity-card" data-quantity="500">
+                    <div class="number">500</div>
+                    <div class="label">筛选结果前500个</div>
+                </div>
+                <div class="quantity-card selected" data-quantity="1000">
+                    <div class="number">1000</div>
+                    <div class="label">筛选结果前1000个</div>
+                </div>
+            </div>
+
+            <h3 class="section-title" style="font-size: 14px; margin-bottom: 12px;">添加主体类型</h3>
+            <div class="type-section">
+                <div class="type-card selected" data-type="leads">
+                    <div>添加到线索</div>
+                </div>
+                <div class="type-card" data-type="customers">
+                    <div>添加到客户、联系人</div>
+                </div>
+            </div>
+
+            <h3 class="section-title" style="font-size: 14px; margin-bottom: 12px; margin-top: 16px;">CRM位置</h3>
+            <div class="location-section">
+                <div class="location-card selected">
+                    <div>添加给我</div>
+                </div>
+                <div class="location-card">
+                    <div>分配给他人</div>
+                </div>
+                <div class="location-card disabled">
+                    <div>添加到公海</div>
+                </div>
+            </div>
+            <div class="permission-note">
+                <span>💡</span>
+                <span>您没有添加到公海权限</span>
+            </div>
+
+            <div class="operation-preview">
+                <h4>领取操作预览</h4>
+                <div class="preview-grid">
+                    <div class="preview-item success">
+                        <span>✅</span>
+                        <span id="preview-claimable">可领取线索：450个</span>
+                    </div>
+                    <div class="preview-item error">
+                        <span>❌</span>
+                        <span id="preview-no-permission">私海无权限：50个</span>
+                    </div>
+                </div>
+
+                <div class="async-notice" id="async-notice">
+                    <h5>⏱️ 大批量操作提示</h5>
+                    <div>操作数量超过50个，将创建后台任务处理，您可以在任务中心查看进度</div>
+                    <div class="time-estimate">
+                        预计完成时间：<span id="time-estimate">40分钟</span>
+                        （按每500个需要20分钟计算）
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- 打标签部分 -->
+        <div class="section">
+            <h2 class="section-title">🏷️ 打标签操作</h2>
+            
+            <div class="tag-section">
+                <div class="tag-header">
+                    <h3 style="margin: 0; font-size: 16px; color: #e65100;">CRM客户标签设置</h3>
+                    <div class="tag-count">可打标签：<span id="tag-count">450个</span></div>
+                </div>
+                
+                <div class="tag-input-area">
+                    <div class="tag">未分配 <span class="remove">×</span></div>
+                    <div class="add-tag-btn" onclick="openTagModal()">+ 添加标签</div>
+                </div>
+                
+                <div class="tag-guide">
+                    没有合适的标签？<a href="#" onclick="openTagManagement()">去增加/修改标签</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-secondary">取消</button>
+            <button class="btn btn-success" id="main-action-btn" onclick="executeAction()">领取线索</button>
+        </div>
+    </div>
+
+    <!-- 任务创建弹窗 -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>📋</span>
+                    创建操作任务
+                </div>
+                <button class="close-btn" onclick="closeTaskModal()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="warning-banner">
+                    <div class="warning-icon">!</div>
+                    <div>
+                        <div style="font-weight: 600; margin-bottom: 4px;">大批量操作检测</div>
+                        <div style="font-size: 13px;">您选择的操作数量较大，系统将创建后台任务进行处理，避免长时间等待</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="taskName">任务名称</label>
+                    <input type="text" id="taskName" placeholder="请输入任务名称" value="线索领取任务_20250714">
+                </div>
+
+                <div class="form-group">
+                    <label for="taskDesc">任务描述</label>
+                    <textarea id="taskDesc" placeholder="请输入任务描述">批量领取1000个线索到个人CRM</textarea>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h4>操作总数量</h4>
+                        <div class="value" id="total-quantity">1000个</div>
+                    </div>
+                    <div class="info-card">
+                        <h4>预计完成时间</h4>
+                        <div class="value" id="estimated-time">40分钟</div>
+                    </div>
+                </div>
+
+                <div class="conditions-preview">
+                    <h4>📊 确认条件组</h4>
+                    <div class="condition-item">
+                        <span>🔍</span>
+                        <span>有无官网：有</span>
+                    </div>
+                    <div class="condition-item">
+                        <span>📅</span>
+                        <span>ICP备案时间：2025-07-01 至 今天</span>
+                    </div>
+                    <div class="condition-item">
+                        <span>📍</span>
+                        <span>注册地址：深圳市</span>
+                    </div>
+                    <div class="condition-item">
+                        <span>💰</span>
+                        <span>成立时间：3年以上</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeTaskModal()">取消</button>
+                <button class="btn btn-primary" onclick="createTask()">创建任务</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果展示弹窗 -->
+    <div class="modal result-modal" id="resultModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">操作结果</div>
+                <button class="close-btn" onclick="closeResultModal()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="result-header">
+                    <div class="result-icon partial">⚠️</div>
+                    <div class="result-title">部分成功</div>
+                    <div class="result-summary">操作完成，部分线索领取失败</div>
+                </div>
+
+                <div class="result-details">
+                    <div class="result-item">
+                        <div class="result-item-label">
+                            <span style="color: #28a745;">✅</span>
+                            <span>成功领取</span>
+                        </div>
+                        <div class="result-item-value">42个</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-item-label">
+                            <span style="color: #dc3545;">❌</span>
+                            <span>领取失败</span>
+                        </div>
+                        <div class="result-item-value">8个</div>
+                    </div>
+                </div>
+
+                <div class="error-details">
+                    <h5>❌ 失败详情</h5>
+                    <div class="error-item">
+                        <span>🔒</span>
+                        <span>在他人私海：5个</span>
+                    </div>
+                    <div class="error-item">
+                        <span>👔</span>
+                        <span>在主管未分配：2个</span>
+                    </div>
+                    <div class="error-item">
+                        <span>🔗</span>
+                        <span>联系方式重复：1个</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="closeResultModal()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据
+        const operationData = {
+            selectedQuantity: 1000,
+            canClaim: 450,
+            noPermission: 50,
+            selectedType: 'leads'
+        };
+
+        // 更新数量显示
+        function updateQuantityDisplay() {
+            const selectedQty = operationData.selectedQuantity;
+            
+            // 按比例计算可操作数量
+            const ratio = selectedQty <= 50 ? 1 : selectedQty / 1000;
+            const canClaim = Math.floor(450 * ratio);
+            const noPermission = selectedQty - canClaim;
+            
+            operationData.canClaim = canClaim;
+            operationData.noPermission = noPermission;
+            
+            // 更新显示
+            document.getElementById('claimable-count').textContent = `${canClaim}个`;
+            document.getElementById('

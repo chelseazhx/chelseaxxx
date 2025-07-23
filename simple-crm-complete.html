@@ -1,0 +1,844 @@
+        .right-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f5f7fa;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-item {
+            padding: 8px 16px;
+            color: #6b7280;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-item.active {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .main-content {
+            padding: 24px;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-btn {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 12px;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+            transition: all 0.2s;
+        }
+
+        .dropdown-btn:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .dropdown-btn.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .arrow {
+            transition: transform 0.2s;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .dropdown-btn.active .arrow {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            margin-top: 2px;
+            display: none;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .menu-item {
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item-label {
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #374151;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .menu-item-label:hover {
+            background: #f8fafc;
+        }
+
+        .menu-item.expandable .menu-item-label::after {
+            content: '▶';
+            font-size: 10px;
+            color: #6b7280;
+            transition: transform 0.2s;
+        }
+
+        .menu-item.expandable.expanded .menu-item-label::after {
+            transform: rotate(90deg);
+        }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #f9fafb;
+        }
+
+        .submenu.expanded {
+            max-height: 200px;
+        }
+
+        .submenu-item {
+            padding: 8px 12px 8px 32px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #4b5563;
+            transition: background 0.2s;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+        }
+
+        .submenu-item:last-child {
+            border-bottom: none;
+        }
+
+        .submenu-item:hover {
+            background: #f3f4f6;
+            color: #3b82f6;
+        }
+
+        .submenu-item::before {
+            content: '•';
+            position: absolute;
+            left: 20px;
+            color: #9ca3af;
+        }
+
+        .submenu-item.with-warning {
+            color: #6b7280;
+        }
+
+        .submenu-item.with-warning::after {
+            content: '⚠';
+            color: #fbbf24;
+            margin-left: 8px;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .results-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .batch-actions-section {
+            padding: 16px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .results-info {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .results-info .highlight {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+
+        .batch-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .divider {
+            width: 1px;
+            height: 20px;
+            background: #e5e7eb;
+            margin: 0 8px;
+        }
+
+        .batch-btn {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .batch-btn:hover:not(:disabled) {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .batch-btn.primary {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .batch-btn.primary:hover:not(:disabled) {
+            background: #2563eb;
+        }
+
+        .batch-btn:disabled {
+            background: #f9fafb;
+            color: #9ca3af;
+            border-color: #e5e7eb;
+            cursor: not-allowed;
+        }
+
+        .warning-icon {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 16px;
+            height: 16px;
+            background: #fbbf24;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: help;
+        }
+
+        .tooltip {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: #1f2937;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            z-index: 1000;
+            max-width: 280px;
+            white-space: normal;
+            text-align: center;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            right: 12px;
+            transform: none;
+            border: 5px solid transparent;
+            border-bottom-color: #1f2937;
+        }
+
+        .warning-icon:hover + .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 16px 24px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f9fafb;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .company-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .company-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+        }
+
+        .company-details h4 {
+            font-size: 14px;
+            color: #111827;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .company-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid;
+        }
+
+        .tag.hot { background: #fef3c7; color: #d97706; border-color: #fbbf24; }
+        .tag.new { background: #fecaca; color: #dc2626; border-color: #f87171; }
+        .tag.industry { background: #e0e7ff; color: #3730a3; border-color: #a5b4fc; }
+        .tag.size { background: #d1fae5; color: #059669; border-color: #6ee7b7; }
+
+        .link {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .pagination {
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .page-info {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .page-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #374151;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .page-btn:hover {
+            background: #f9fafb;
+        }
+
+        .page-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="nav-item">首页</div>
+        <div class="nav-item active">企业</div>
+        <div class="nav-item">店铺</div>
+        <div class="nav-item">组织</div>
+        <div class="nav-item">模板库</div>
+    </div>
+
+    <div class="main-content">
+        <div class="filter-section">
+            <div class="filter-btn active">筛选</div>
+            <div class="filter-btn">清空</div>
+            <div class="filter-btn">保存筛选组</div>
+            <div class="filter-btn">复制筛选组</div>
+            <div class="filter-btn">粘贴筛选组</div>
+            <div class="filter-btn">已选择7个筛选条件</div>
+            
+            <div style="margin-left: auto;">
+                收起
+            </div>
+        </div>
+
+        <div class="results-section">
+            <div class="results-header">
+                <div class="results-info">
+                    共筛选为网络筛到 <span class="highlight">1000000+</span> 家符合条件的企业，<span class="highlight">分页前 500</span> 条数据
+                </div>
+            </div>
+
+            <div class="batch-actions-section">
+                <div class="batch-actions">
+                    <button class="batch-btn primary" id="batchActionBtn" disabled>批量操作</button>
+                    <button class="batch-btn" id="tagBtn" disabled>
+                        打标签
+                        <span class="warning-icon" id="warningIcon">!</span>
+                        <div class="tooltip">当前打标签能力仅针对在CRM内的企业进行操作，请在右侧栏筛选</div>
+                    </button>
+                    <button class="batch-btn">解锁</button>
+                    <button class="batch-btn">更多操作</button>
+                    <button class="batch-btn">生成人群包</button>
+                </div>
+                <div class="right-actions">
+                    <button class="batch-btn">创建批量任务</button>
+                    <div class="dropdown-container">
+                        <div class="dropdown-btn" id="filterDropdown">
+                            <span id="selectedFilter">全部企业</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <!-- 全部企业 - 有子选项 -->
+                            <div class="menu-item expandable">
+                                <div class="menu-item-label">全部企业</div>
+                                <div class="submenu">
+                                    <div class="submenu-item" data-category="all" data-sub="in-crm" data-parent="全部企业">在CRM内</div>
+                                    <div class="submenu-item" data-category="all" data-sub="not-in-crm" data-parent="全部企业">不在CRM内</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 可推进企业 - 有子选项 -->
+                            <div class="menu-item expandable">
+                                <div class="menu-item-label">可推进企业</div>
+                                <div class="submenu">
+                                    <div class="submenu-item" data-category="pushable" data-sub="in-crm" data-parent="可推进企业">在CRM内</div>
+                                    <div class="submenu-item" data-category="pushable" data-sub="not-in-crm" data-parent="可推进企业">不在CRM内</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 未解锁企业 - 无子选项 -->
+                            <div class="menu-item">
+                                <div class="menu-item-label" data-category="unlocked">未解锁企业</div>
+                            </div>
+                            
+                            <!-- 已解锁企业 - 有子选项 -->
+                            <div class="menu-item expandable">
+                                <div class="menu-item-label">已解锁企业</div>
+                                <div class="submenu">
+                                    <div class="submenu-item" data-category="locked" data-sub="in-crm" data-parent="已解锁企业">在CRM内</div>
+                                    <div class="submenu-item" data-category="locked" data-sub="not-in-crm" data-parent="已解锁企业">不在CRM内</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 已解锁未转CRM - 无子选项 -->
+                            <div class="menu-item">
+                                <div class="menu-item-label" data-category="locked-not-transferred">已解锁未转CRM</div>
+                            </div>
+                            
+                            <!-- CRM公海可领取 - 无子选项 -->
+                            <div class="menu-item">
+                                <div class="menu-item-label" data-category="crm-public">CRM公海可领取</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" class="checkbox" id="selectAll"></th>
+                            <th>企业名称</th>
+                            <th>联系人</th>
+                            <th>官网</th>
+                            <th>解锁次数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox row-checkbox"></td>
+                            <td>
+                                <div class="company-info">
+                                    <div class="company-logo" style="background: #16a34a;">佛</div>
+                                    <div class="company-details">
+                                        <h4>苏州佛山精密制造股份有限公司</h4>
+                                        <div class="company-tags">
+                                            <span class="tag hot">HOT</span>
+                                            <span class="tag industry">制造业(D2384)</span>
+                                            <span class="tag size">定向精选</span>
+                                            <span class="tag size">500强</span>
+                                            <span class="tag new">新上市</span>
+                                            <span class="tag size">10000人以上</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>150</td>
+                            <td><a href="#" class="link">www.dsbj.com</a></td>
+                            <td>4844</td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox row-checkbox"></td>
+                            <td>
+                                <div class="company-info">
+                                    <div class="company-logo" style="background: #06b6d4;">业精</div>
+                                    <div class="company-details">
+                                        <h4>佛山业精机械制造有限公司</h4>
+                                        <div class="company-tags">
+                                            <span class="tag hot">HOT</span>
+                                            <span class="tag new">新创业</span>
+                                            <span class="tag industry">制造企业</span>
+                                            <span class="tag industry">高新企业</span>
+                                            <span class="tag industry">专精特新</span>
+                                            <span class="tag size">1000-5000人</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>28</td>
+                            <td><a href="#" class="link">www.yjing.com</a></td>
+                            <td>2062</td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox row-checkbox"></td>
+                            <td>
+                                <div class="company-info">
+                                    <div class="company-logo" style="background: #f59e0b;">四川</div>
+                                    <div class="company-details">
+                                        <h4>四川扶达实业投资管理有限公司</h4>
+                                        <div class="company-tags">
+                                            <span class="tag hot">HOT</span>
+                                            <span class="tag new">新创业</span>
+                                            <span class="tag industry">制造企业</span>
+                                            <span class="tag industry">高新企业</span>
+                                            <span class="tag industry">科技型中小企业</span>
+                                            <span class="tag size">51-1000人</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>38</td>
+                            <td><a href="#" class="link">www.sdco.cn</a></td>
+                            <td>1230</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <div class="page-info">50 条/页</div>
+                <div class="page-controls">
+                    <button class="page-btn">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">5</button>
+                    <span>...</span>
+                    <button class="page-btn">></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 配置数据
+        const categoryConfig = {
+            'all': { name: '全部企业', defaultAction: '批量处理', hasSubOptions: true },
+            'pushable': { name: '可推进企业', defaultAction: '批量处理', hasSubOptions: true },
+            'unlocked': { name: '未解锁企业', defaultAction: '添加到CRM', hasSubOptions: false },
+            'locked': { name: '已解锁企业', defaultAction: '批量处理', hasSubOptions: true },
+            'locked-not-transferred': { name: '已解锁未转CRM', defaultAction: '添加到CRM', hasSubOptions: false },
+            'crm-public': { name: 'CRM公海可领取', defaultAction: '领取', hasSubOptions: false }
+        };
+
+        // 获取DOM元素
+        const filterDropdown = document.getElementById('filterDropdown');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        const selectedFilter = document.getElementById('selectedFilter');
+        const batchActionBtn = document.getElementById('batchActionBtn');
+        const tagBtn = document.getElementById('tagBtn');
+        const warningIcon = document.getElementById('warningIcon');
+        
+        let currentSelection = {
+            category: null,
+            subCategory: null,
+            isInCRM: false
+        };
+
+        // 切换下拉菜单
+        filterDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+            filterDropdown.classList.toggle('active');
+        });
+
+        // 点击外部关闭菜单
+        document.addEventListener('click', function() {
+            dropdownMenu.classList.remove('show');
+            filterDropdown.classList.remove('active');
+        });
+
+        // 阻止菜单内部点击冒泡
+        dropdownMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // 处理可展开菜单项的点击
+        document.querySelectorAll('.menu-item.expandable .menu-item-label').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                const menuItem = this.closest('.menu-item');
+                const submenu = menuItem.querySelector('.submenu');
+                const isExpanded = submenu.classList.contains('expanded');
+                
+                // 先关闭所有其他展开的子菜单
+                document.querySelectorAll('.submenu').forEach(sub => {
+                    sub.classList.remove('expanded');
+                });
+                document.querySelectorAll('.menu-item.expandable').forEach(item => {
+                    item.classList.remove('expanded');
+                });
+                
+                // 如果当前菜单没有展开，则展开它
+                if (!isExpanded) {
+                    submenu.classList.add('expanded');
+                    menuItem.classList.add('expanded');
+                }
+            });
+        });
+
+        // 处理有子选项的子菜单项点击
+        document.querySelectorAll('.submenu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const category = this.getAttribute('data-category');
+                const sub = this.getAttribute('data-sub');
+                const parent = this.getAttribute('data-parent');
+                const subLabel = this.textContent;
+                
+                currentSelection = {
+                    category: category,
+                    subCategory: sub,
+                    isInCRM: sub === 'in-crm'
+                };
+                
+                // 更新显示文本
+                selectedFilter.textContent = `${parent} - ${subLabel}`;
+                updateButtons();
+                
+                // 关闭菜单
+                dropdownMenu.classList.remove('show');
+                filterDropdown.classList.remove('active');
+            });
+        });
+
+        // 处理无子选项的一级菜单项点击
+        document.querySelectorAll('.menu-item:not(.expandable) .menu-item-label[data-category]').forEach(item => {
+            item.addEventListener('click', function() {
+                const category = this.getAttribute('data-category');
+                const config = categoryConfig[category];
+                
+                currentSelection = {
+                    category: category,
+                    subCategory: null,
+                    isInCRM: category === 'crm-public' // CRM公海默认在CRM内
+                };
+                
+                selectedFilter.textContent = config.name;
+                updateButtons();
+                
+                dropdownMenu.classList.remove('show');
+                filterDropdown.classList.remove('active');
+            });
+        });
+
+        function updateButtons() {
+            if (!currentSelection.category) return;
+            
+            batchActionBtn.disabled = false;
+            
+            if (currentSelection.subCategory) {
+                // 选择了具体的CRM状态
+                batchActionBtn.textContent = currentSelection.isInCRM ? '领取' : '添加到CRM';
+            } else {
+                // 选择了主分类
+                const config = categoryConfig[currentSelection.category];
+                batchActionBtn.textContent = config ? config.defaultAction : '批量处理';
+            }
+            
+            // 更新打标签按钮
+            if (currentSelection.isInCRM) {
+                tagBtn.disabled = false;
+                warningIcon.style.display = 'none';
+            } else {
+                tagBtn.disabled = true;
+                warningIcon.style.display = 'block';
+            }
+        }
+
+        // 复选框逻辑
+        const selectAll = document.getElementById('selectAll');
+        const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+
+        selectAll.addEventListener('change', function() {
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        rowCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+                selectAll.checked = checkedCount === rowCheckboxes.length;
+                selectAll.indeterminate = checkedCount > 0 && checkedCount < rowCheckboxes.length;
+            });
+        });
+
+        // 批量操作按钮点击
+        batchActionBtn.addEventListener('click', function() {
+            if (this.disabled) return;
+            
+            const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+            if (checkedCount === 0) {
+                alert('请先选择要操作的企业');
+                return;
+            }
+            
+            const action = this.textContent;
+            alert(`执行操作：${action}，选中 ${checkedCount} 家企业`);
+        });
+
+        // 打标签按钮点击
+        tagBtn.addEventListener('click', function() {
+            if (this.disabled) return;
+            
+            const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+            if (checkedCount === 0) {
+                alert('请先选择要打标签的企业');
+                return;
+            }
+            
+            alert(`为 ${checkedCount} 家企业打标签`);
+        });
+
+        // 初始化
+        updateButtons();
+    </script>
+</body>
+</html>

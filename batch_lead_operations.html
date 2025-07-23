@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>线索批量操作</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .header {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .status-banner {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .status-banner .icon {
+            width: 20px;
+            height: 20px;
+            background: #0ea5e9;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .status-info {
+            flex: 1;
+        }
+
+        .status-info .main-text {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .status-breakdown {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 4px;
+        }
+
+        .status-item .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .dot-green { background: #10b981; }
+        .dot-blue { background: #0ea5e9; }
+        .dot-red { background: #ef4444; }
+
+        .section {
+            padding: 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-icon {
+            width: 4px;
+            height: 16px;
+            background: #0ea5e9;
+            border-radius: 2px;
+        }
+
+        .type-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .type-card {
+            background: #fafafa;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .type-card.selected {
+            border-color: #0ea5e9;
+            background: #f0f9ff;
+        }
+
+        .type-main {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .type-sub {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .operation-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .operation-card {
+            background: #fafafa;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .operation-card.selected {
+            border-color: #0ea5e9;
+            background: #f0f9ff;
+        }
+
+        .operation-card.highlight {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .operation-card.highlight::before {
+            content: "推荐";
+            position: absolute;
+            top: -8px;
+            right: 8px;
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .operation-main {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .operation-sub {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .quantity-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .quantity-card {
+            background: #fafafa;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .quantity-card.selected {
+            border-color: #0ea5e9;
+            background: #f0f9ff;
+        }
+
+        .quantity-card.more {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #999;
+            min-width: 80px;
+        }
+
+        .quantity-card .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0ea5e9;
+            margin-bottom: 8px;
+        }
+
+        .quantity-card .label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .quantity-sub {
+            font-size: 12px;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .more-options {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 100;
+            min-width: 120px;
+        }
+
+        .more-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .more-option:last-child {
+            border-bottom: none;
+        }
+
+        .more-option:hover {
+            background: #f0f8ff;
+        }
+
+        .more-option-number {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0ea5e9;
+        }
+
+        .more-option-desc {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .more-option-sub {
+            font-size: 11px;
+            color: #10b981;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .location-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .location-card {
+            background: #fafafa;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .location-card.selected {
+            border-color: #0ea5e9;
+            background: #f0f9ff;
+        }
+
+        .location-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .permission-note {
+            margin-top: 12px;
+            color: #666;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pool-warning {
+            background: #fef3cd;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 16px;
+            font-size: 14px;
+            color: #92400e;
+            display: none;
+        }
+
+        .pool-warning .pool-icon {
+            font-size: 16px;
+            margin-right: 8px;
+        }
+
+        .tag-section {
+            background: #fff8e1;
+            border: 1px solid #ffb74d;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .tag-input-area {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 8px;
+            background: white;
+            min-height: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .tag {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            color: #0ea5e9;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag .remove {
+            cursor: pointer;
+            color: #999;
+            font-weight: bold;
+            margin-left: 4px;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .tag .remove:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .add-tag-btn {
+            background: #f0f8ff;
+            border: 1px dashed #0ea5e9;
+            color: #0ea5e9;
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-tag-btn:hover {
+            background: #dbeafe;
+            border-color: #0284c7;
+        }
+
+        .tag-guide {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .tag-guide a {
+            color: #0ea5e9;
+            text-decoration: none;
+        }
+
+        .tag-guide a:hover {
+            text-decoration: underline;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 20px 24px;
+            background: #f8f9fa;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: #0ea5e9;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0284c7;
+        }
+
+        .btn-cancel {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-cancel:hover {
+            background: #e8e8e8;
+        }
+
+        .option-item {
+            margin-bottom: 24px;
+            padding: 16px;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .option-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .option-checkbox {
+            margin-right: 8px;
+        }
+
+        .option-label {
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+        }
+
+        /* 标签弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .tag-search {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            margin: 16px 0;
+        }
+
+        .tag-categories {
+            margin-bottom: 20px;
+        }
+
+        .tag-category {
+            margin-bottom: 16px;
+        }
+
+        .tag-category-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-category-icon {
+            width: 16px;
+            height: 16px;
+            background: #0ea5e9;
+            border-radius: 2px;
+        }
+
+        .tag-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag-option {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 16px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .tag-option:hover {
+            border-color: #0ea5e9;
+            background: #f0f8ff;
+        }
+
+        .tag-option.selected {
+            background: #0ea5e9;
+            border-color: #0ea5e9;
+            color: white;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 16px;
+        }
+
+        /* 结果页面样式 */
+        .result-container {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .result-header {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .result-header.success {
+            background: #f0fdf4;
+        }
+
+        .result-header.partial {
+            background: #fffbeb;
+        }
+
+        .result-icon {
+            width: 64px;
+            height: 64px;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            margin: 0 auto 16px;
+        }
+
+        .result-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .result-title.success {
+            color: #065f46;
+        }
+
+        .result-title.partial {
+            color: #92400e;
+        }
+
+        .result-summary {
+            font-size: 16px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin: 0 20px;
+        }
+
+        .result-summary.success {
+            color: #047857;
+            border: 1px solid #d1fae5;
+        }
+
+        .result-summary.partial {
+            color: #92400e;
+            border: 1px solid #fbbf24;
+        }
+
+        .main-content {
+            padding: 24px;
+        }
+
+        .failure-section {
+            margin-bottom: 32px;
+        }
+
+        .failure-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .failure-section-icon {
+            width: 4px;
+            height: 18px;
+            background: #ef4444;
+            border-radius: 2px;
+        }
+
+        .failure-group {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .failure-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .failure-summary {
+            font-weight: 600;
+            color: #991b1b;
+            font-size: 16px;
+        }
+
+        .failure-count {
+            background: #dc2626;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .failure-reason {
+            color: #7f1d1d;
+            font-size: 14px;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .company-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .company-item {
+            background: white;
+            border: 1px solid #f3e8e8;
+            border-radius: 6px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .company-name {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .company-count {
+            color: #dc2626;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .retry-btn {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .retry-btn:hover {
+            background: #d97706;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .network-notice {
+            background: #fef3cd;
+            border: 1px solid #fbbf24;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <!-- 主操作页面 -->
+    <div class="container" id="mainContainer">
+        <div class="header">
+            <h1>线索批量操作</h1>
+            <div class="status-banner">
+                <div class="icon">i</div>
+                <div class="status-info">
+                    <div class="main-text">您选中了 <strong id="selectedMainCount">100</strong> 个主体</div>
+                    <div class="status-breakdown">
+                        <div class="status-item">
+                            <div class="dot dot-green"></div>
+                            <span>可领取 <strong id="availableCount">35</strong>个</span>
+                        </div>
+                        <div class="status-item">
+                            <div class="dot dot-blue"></div>
+                            <span>可新增 <strong id="addableCount">30</strong>个</span>
+                        </div>
+                        <div class="status-item">
+                            <div class="dot dot-red"></div>
+                            <span>无法操作 <strong id="unavailableCount">35</strong>个（在他人私海）</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 选择客资类型 -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-icon"></div>
+                选择客资类型
+            </div>
+            <div class="type-section">
+                <div class="type-card selected" data-type="leads">
+                    <div class="type-main">线索</div>
+                    <div class="type-sub" id="leadsSubText">可领取130条线索</div>
+                </div>
+                <div class="type-card" data-type="customers">
+                    <div class="type-main">客户、联系人</div>
+                    <div class="type-sub" id="customersSubText">可领取35个客户</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作类型 -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-icon"></div>
+                操作类型
+            </div>
+            <div class="operation-section">
+                <div class="operation-card selected" data-operation="claim">
+                    <div class="operation-main">领取</div>
+                    <div class="operation-sub" id="claimDesc">35个可领取</div>
+                </div>
+                <div class="operation-card" data-operation="crm">
+                    <div class="operation-main">新增到CRM</div>
+                    <div class="operation-sub" id="crmDesc">30个可新增</div>
+                </div>
+                <div class="operation-card highlight" data-operation="oneclick">
+                    <div class="operation-main">一键导入</div>
+                    <div class="operation-sub" id="oneclickDesc">65个可导入</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 选择数量 -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-icon"></div>
+                选择数量
+            </div>
+            <div class="quantity-cards" id="quantityCards">
+                <!-- 动态生成卡片 -->
+            </div>
+            
+            <!-- 容量警告 -->
+            <div class="pool-warning" id="poolWarning">
+                <span class="pool-icon">⚠️</span>
+                <span id="poolWarningText">选中的线索超过线索保有量（50个），2条线索将会转入失败。</span>
+            </div>
+        </div>
+
+        <!-- 领取/添加位置 -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-icon"></div>
+                <span id="locationSectionTitle">领取位置</span>
+            </div>
+            <div class="location-section">
+                <div class="location-card selected">
+                    <div id="locationOption1">领取给我</div>
+                </div>
+                <div class="location-card">
+                    <div id="locationOption2">分配给他人</div>
+                </div>
+                <div class="location-card disabled">
+                    <div id="locationOption3">领取到公海</div>
+                </div>
+            </div>
+            <div class="permission-note">
+                <span>💡</span>
+                <span>您没有添加到公海权限</span>
+            </div>
+        </div>
+
+        <!-- 更多选项 -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-icon"></div>
+                更多选项
+            </div>
+            
+            <div class="option-item">
+                <div class="option-header">
+                    <input type="checkbox" id="addCrmTag" class="option-checkbox" checked>
+                    <label for="addCrmTag" class="option-label">添加CRM标签</label>
+                </div>
+                <div class="tag-section">
+                    <div class="tag-input-area" id="tagContainer">
+                        <div class="tag" id="defaultTag">
+                            <span>未分配</span>
+                            <span class="remove" onclick="removeTag(this)">×</span>
+                        </div>
+                        <button class="add-tag-btn" id="addTagBtn">添加标签</button>
+                    </div>
+                    <div class="tag-guide">
+                        没有合适的标签？<a href="#" onclick="openTagManagement()">去增加/修改标签</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-cancel">取消</button>
+            <button class="btn btn-primary" id="confirmBtn">领取（130条线索）</button>
+        </div>
+    </div>
+
+    <!-- 标签选择弹窗 -->
+    <div class="modal" id="tagModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">选择标签</div>
+                <input type="text" class="tag-search" placeholder="搜索标签" />
+            </div>
+            
+            <div class="tag-categories">
+                <div class="tag-category">
+                    <div class="tag-category-title">
+                        <div class="tag-category-icon"></div>
+                        已分配
+                    </div>
+                    <div class="tag-options">
+                        <div class="tag-option">未分配</div>
+                        <div class="tag-option">来分配</div>
+                        <div class="tag-option">重点客户</div>
+                        <div class="tag-option">潜在客户</div>
+                        <div class="tag-option">已添加微信</div>
+                        <div class="tag-option">微信通过</div>
+                    </div>
+                </div>
+                
+                <div class="tag-category">
+                    <div class="tag-category-title">
+                        <div class="tag-category-icon"></div>
+                        业务分类（多选）
+                    </div>
+                    <div class="tag-options">
+                        <div class="tag-option">商标</div>
+                        <div class="tag-option">专利</div>
+                        <div class="tag-option">政府项目</div>
+                        <div class="tag-option">认证</div>
+                        <div class="tag-option">财税</div>
+                        <div class="tag-option">知产维权</div>
+                        <div class="tag-option">知产转让</div>
+                        <div class="tag-option">高企新办</div>
+                        <div class="tag-option">创小申请</div>
+                        <div class="tag-option">专精特新</div>
+                    </div>
+                </div>
+                
+                <div class="tag-category">
+                    <div class="tag-category-title">
+                        <div class="tag-category-icon"></div>
+                        客户质量（单选）
+                    </div>
+                    <div class="tag-options">
+                        <div class="tag-option">A类客户</div>
+                        <div class="tag-option">B类客户</div>
+                        <div class="tag-option">C类客户</div>
+                        <div class="tag-option">D类客户</div>
+                    </div>
+                </div>
+                
+                <div class="tag-category">
+                    <div class="tag-category-title">
+                        <div class="tag-category-icon"></div>
+                        付款情况（单选）
+                    </div>
+                    <div class="tag-options">
+                        <div class="tag-option">预付款</div>
+                        <div class="tag-option">月结30天以内</div>
+                        <div class="tag-option">月结30-60天</div>
+                        <div class="tag-option">大于月结60天</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-cancel" id="cancelTagSelection">取消</button>
+                <button class="btn btn-primary" id="confirmTagSelection">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果页面 -->
+    <div class="result-container" id="resultContainer">
+        <div class="result-header" id="resultHeader">
+            <div class="result-icon" id="resultIcon">✓</div>
+            <div class="result-title" id="resultTitle">领取完成</div>
+            <div class="result-summary" id="resultSummary">
+                您选中130条线索领取：全部领取成功
+            </div>
+        </div>
+
+        <div class="main-content" id="resultContent">
+            <div class="failure-section" id="failureSection" style="display: none;">
+                <div class="failure-section-title">
+                    <div class="failure-section-icon"></div>
+                    失败详情
+                </div>
+                <div id="failureGroups"></div>
+            </div>
+        </div>
+
+        <div class="result-actions" id="resultActions">
+            <button class="btn btn-cancel" onclick="closeResult()">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        // 配置数据
+        const config = {
+            leadsPoolCapacity: 50, // 线索池容量
+            customersPoolCapacity: 10 // 客户私海容量
+        };
+
+        // 基础数据配置
+        const baseData = {
+            totalSelected: 100,
+            available: 35,    // 可领取
+            addable: 30,      // 可新增
+            unavailable: 35   // 无法操作
+        };
+
+        // 数量与线索数的映射关系
+        const quantityToLeads = {
+            40: 130,
+            50: 180,
+            100: 350
+        };
+
+        // 数量与客户数的映射关系
+        const quantityToCustomers = {
+            40: 35,
+            50: 42,
+            100: 85
+        };
+
+        let currentSelectedQuantity = 100;
+        let currentType = 'leads';
+        let currentOperation = 'claim';
+
+        // 全局函数：删除标签
+        function removeTag(element) {
+            element.parentElement.remove();
+        }
+
+        function openTagManagement() {
+            alert('跳转到标签管理页面');
+        }
+
+        // 计算各种数量
+        function calculateCounts() {
+            const isLeads = currentType === 'leads';
+            
+            let availableForClaim, availableForAdd, totalAvailableForOneClick;
+            
+            if (isLeads) {
+                // 线索模式
+                availableForClaim = quantityToLeads[currentSelectedQuantity] || Math.round(currentSelectedQuantity * 3.5);
+                availableForAdd = Math.round(availableForClaim * 0.8); // 可新增约为可领取的80%
+                totalAvailableForOneClick = availableForClaim + availableForAdd;
+            } else {
+                // 客户模式
+                availableForClaim = quantityToCustomers[currentSelectedQuantity] || Math.round(currentSelectedQuantity * 0.85);
+                availableForAdd = Math.round(availableForClaim * 0.6); // 可新增约为可领取的60%
+                totalAvailableForOneClick = availableForClaim + availableForAdd;
+            }
+            
+            return {
+                claim: availableForClaim,
+                add: availableForAdd,
+                oneclick: totalAvailableForOneClick
+            };
+        }
+
+        // 渲染数量选择卡片
+        function renderQuantityCards() {
+            const container = document.getElementById('quantityCards');
+            container.innerHTML = '';
+            
+            const quantities = [40, 50, 100];
+            
+            quantities.forEach(quantity => {
+                const card = createQuantityCard(quantity, quantity === currentSelectedQuantity);
+                container.appendChild(card);
+            });
+        }
+
+        // 创建数量卡片
+        function createQuantityCard(quantity, isSelected) {
+            const card = document.createElement('div');
+            card.className = `quantity-card ${isSelected ? 'selected' : ''}`;
+            card.dataset.quantity = quantity;
+            
+            let label = '';
+            if (quantity === 40) label = '筛选结果前40个';
+            else if (quantity === 50) label = '筛选结果前50个'; 
+            else if (quantity === 100) label = '当前选中';
+            
+            // 计算当前的数量
+            const counts = calculateCountsForQuantity(quantity);
+            let subText = '';
+            
+            if (currentType === 'leads') {
+                if (currentOperation === 'claim') {
+                    subText = `可领取${counts.claim}条线索`;
+                } else if (currentOperation === 'crm') {
+                    subText = `可新增${counts.add}条线索`;
+                } else {
+                    subText = `可导入${counts.oneclick}条线索`;
+                }
+            } else {
+                if (currentOperation === 'claim') {
+                    subText = `可领取${counts.claim}个客户`;
+                } else if (currentOperation === 'crm') {
+                    subText = `可新增${counts.add}个客户`;
+                } else {
+                    subText = `可导入${counts.oneclick}个客户`;
+                }
+            }
+            
+            card.innerHTML = `
+                <div class="number">${quantity}</div>
+                <div class="label">${label}</div>
+                <div class="quantity-sub">${subText}</div>
+            `;
+            
+            card.addEventListener('click', function() {
+                currentSelectedQuantity = quantity;
+                renderQuantityCards();
+                updateDisplay();
+            });
+            
+            return card;
+        }
+
+        // 更新数量卡片的子文本
+        function updateQuantityCardSubText(card, quantity) {
+            const subTextElement = card.querySelector('.quantity-sub');
+            const counts = calculateCountsForQuantity(quantity);
+            
+            let subText = '';
+            if (currentType === 'leads') {
+                if (currentOperation === 'claim') {
+                    subText = `可领取${counts.claim}条线索`;
+                } else if (currentOperation === 'crm') {
+                    subText = `可新增${counts.add}条线索`;
+                } else {
+                    subText = `可导入${counts.oneclick}条线索`;
+                }
+            } else {
+                if (currentOperation === 'claim') {
+                    subText = `可领取${counts.claim}个客户`;
+                } else if (currentOperation === 'crm') {
+                    subText = `可新增${counts.add}个客户`;
+                } else {
+                    subText = `可导入${counts.oneclick}个客户`;
+                }
+            }
+            
+            subTextElement.textContent = subText;
+        }
+
+        // 更新所有数量卡片的子文本
+        function updateAllQuantityCardSubTexts() {
+            const quantityCards = document.querySelectorAll('.quantity-card[data-quantity]');
+            quantityCards.forEach(card => {
+                const quantity = parseInt(card.dataset.quantity);
+                updateQuantityCardSubText(card, quantity);
+            });
+        }
+
+        // 计算指定数量的各种操作数量
+        function calculateCountsForQuantity(quantity) {
+            const isLeads = currentType === 'leads';
+            
+            let availableForClaim, availableForAdd, totalAvailableForOneClick;
+            
+            if (isLeads) {
+                availableForClaim = quantityToLeads[quantity] || Math.round(quantity * 3.5);
+                availableForAdd = Math.round(availableForClaim * 0.8);
+                totalAvailableForOneClick = availableForClaim + availableForAdd;
+            } else {
+                availableForClaim = quantityToCustomers[quantity] || Math.round(quantity * 0.85);
+                availableForAdd = Math.round(availableForClaim * 0.6);
+                totalAvailableForOneClick = availableForClaim + availableForAdd;
+            }
+            
+            return {
+                claim: availableForClaim,
+                add: availableForAdd,
+                oneclick: totalAvailableForOneClick
+            };
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            const counts = calculateCounts();
+            
+            // 更新状态栏 - 保持原始基础数据
+            document.getElementById('selectedMainCount').textContent = baseData.totalSelected;
+            document.getElementById('availableCount').textContent = baseData.available;
+            document.getElementById('addableCount').textContent = baseData.addable;
+            document.getElementById('unavailableCount').textContent = baseData.unavailable;
+            
+            // 更新客资类型显示
+            const isLeads = currentType === 'leads';
+            if (isLeads) {
+                document.getElementById('leadsSubText').textContent = `可领取${counts.claim}条线索`;
+                document.getElementById('customersSubText').textContent = `可领取${Math.round(counts.claim * 0.27)}个客户`;
+            } else {
+                document.getElementById('leadsSubText').textContent = `可领取${Math.round(counts.claim * 3.7)}条线索`;
+                document.getElementById('customersSubText').textContent = `可领取${counts.claim}个客户`;
+            }
+
+            // 更新操作类型描述
+            document.getElementById('claimDesc').textContent = `${counts.claim}个可领取`;
+            document.getElementById('crmDesc').textContent = `${counts.add}个可新增`;
+            document.getElementById('oneclickDesc').textContent = `${counts.oneclick}个可导入`;
+
+            // 检查容量警告
+            checkPoolWarning(counts);
+            
+            // 更新按钮文本
+            updateConfirmButton();
+        }
+
+        // 检查容量警告
+        function checkPoolWarning(counts) {
+            const poolWarning = document.getElementById('poolWarning');
+            const poolWarningText = document.getElementById('poolWarningText');
+            const isLeads = currentType === 'leads';
+            
+            let shouldShowWarning = false;
+            let warningText = '';
+            
+            if (currentOperation === 'claim') {
+                if (isLeads && counts.claim > config.leadsPoolCapacity) {
+                    const failCount = counts.claim - config.leadsPoolCapacity;
+                    warningText = `选中的线索超过线索保有量（${config.leadsPoolCapacity}个），${failCount}条线索将会转入失败。`;
+                    shouldShowWarning = true;
+                } else if (!isLeads && counts.claim > config.customersPoolCapacity) {
+                    const failCount = counts.claim - config.customersPoolCapacity;
+                    warningText = `选中的客户超过客户私海保有量（${config.customersPoolCapacity}个），${failCount}个客户将会转入失败。`;
+                    shouldShowWarning = true;
+                }
+            }
+            
+            if (shouldShowWarning) {
+                poolWarningText.textContent = warningText;
+                poolWarning.style.display = 'block';
+            } else {
+                poolWarning.style.display = 'none';
+            }
+        }
+
+        // 更新确认按钮文本
+        function updateConfirmButton() {
+            const btn = document.getElementById('confirmBtn');
+            const counts = calculateCounts();
+            const isLeads = currentType === 'leads';
+            
+            let operationText = '';
+            let count = '';
+            
+            if (currentOperation === 'claim') {
+                operationText = '领取';
+                count = isLeads ? `${counts.claim}条线索` : `${counts.claim}个客户`;
+            } else if (currentOperation === 'crm') {
+                operationText = '新增到CRM';
+                count = isLeads ? `${counts.add}条线索` : `${counts.add}个客户`;
+            } else if (currentOperation === 'oneclick') {
+                operationText = '一键导入';
+                count = isLeads ? `${counts.oneclick}条线索` : `${counts.oneclick}个客户`;
+            }
+            
+            btn.textContent = `${operationText}（${count}）`;
+        }
+
+        // 更新位置区域标题
+        function updateLocationSection() {
+            const locationTitle = document.getElementById('locationSectionTitle');
+            const option1 = document.getElementById('locationOption1');
+            const option2 = document.getElementById('locationOption2');
+            const option3 = document.getElementById('locationOption3');
+            
+            if (currentOperation === 'claim') {
+                locationTitle.textContent = '领取位置';
+                option1.textContent = '领取给我';
+                option2.textContent = '分配给他人';
+                option3.textContent = '领取到公海';
+            } else {
+                locationTitle.textContent = '添加位置';
+                option1.textContent = '添加给我';
+                option2.textContent = '分配给他人';
+                option3.textContent = '添加到公海';
+            }
+        }
+
+        // 客资类型选择
+        document.querySelectorAll('.type-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                currentType = this.dataset.type;
+                updateAllQuantityCardSubTexts(); // 更新所有数量卡片的子文本
+                updateDisplay();
+            });
+        });
+
+        // 操作类型选择
+        document.querySelectorAll('.operation-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.operation-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                currentOperation = this.dataset.operation;
+                updateAllQuantityCardSubTexts(); // 更新所有数量卡片的子文本
+                updateLocationSection();
+                updateDisplay();
+            });
+        });
+
+        // 位置选择
+        document.querySelectorAll('.location-card').forEach(card => {
+            if (!card.classList.contains('disabled')) {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('.location-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            }
+        });
+
+        // 确认按钮点击
+        document.getElementById('confirmBtn').addEventListener('click', function() {
+            setTimeout(() => {
+                showResult();
+            }, 500);
+        });
+
+        // 显示结果页面
+        function showResult() {
+            document.getElementById('mainContainer').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'block';
+            
+            const counts = calculateCounts();
+            const isLeads = currentType === 'leads';
+            
+            let currentCount;
+            if (currentOperation === 'claim') {
+                currentCount = counts.claim;
+            } else if (currentOperation === 'crm') {
+                currentCount = counts.add;
+            } else {
+                currentCount = counts.oneclick;
+            }
+            
+            let resultData = {};
+            
+            if (isLeads) {
+                // 线索模式结果
+                if (currentOperation === 'claim' && currentCount <= config.leadsPoolCapacity) {
+                    // 完全成功
+                    resultData = {
+                        success: true,
+                        totalItems: currentCount,
+                        successItems: currentCount,
+                        failedItems: 0,
+                        itemType: '条线索',
+                        failures: []
+                    };
+                } else if (currentOperation === 'claim' && currentCount > config.leadsPoolCapacity) {
+                    // 部分失败
+                    const poolFailCount = currentCount - config.leadsPoolCapacity;
+                    const successCount = currentCount - poolFailCount;
+                    
+                    resultData = {
+                        success: false,
+                        totalItems: currentCount,
+                        successItems: successCount,
+                        failedItems: poolFailCount,
+                        itemType: '条线索',
+                        failures: [{
+                            type: 'pool_full',
+                            reason: '线索池保有量已满',
+                            companies: [
+                                { name: '企业A', count: Math.ceil(poolFailCount * 0.6) },
+                                { name: '企业B', count: Math.floor(poolFailCount * 0.4) }
+                            ]
+                        }]
+                    };
+                } else {
+                    // 新增到CRM或一键导入都成功
+                    resultData = {
+                        success: true,
+                        totalItems: currentCount,
+                        successItems: currentCount,
+                        failedItems: 0,
+                        itemType: '条线索',
+                        failures: []
+                    };
+                }
+            } else {
+                // 客户模式结果
+                if (currentOperation === 'claim' && currentCount <= config.customersPoolCapacity) {
+                    resultData = {
+                        success: true,
+                        totalItems: currentCount,
+                        successItems: currentCount,
+                        failedItems: 0,
+                        itemType: '个客户',
+                        failures: []
+                    };
+                } else if (currentOperation === 'claim' && currentCount > config.customersPoolCapacity) {
+                    const poolFailCount = currentCount - config.customersPoolCapacity;
+                    const successCount = currentCount - poolFailCount;
+                    
+                    resultData = {
+                        success: false,
+                        totalItems: currentCount,
+                        successItems: successCount,
+                        failedItems: poolFailCount,
+                        itemType: '个客户',
+                        failures: [{
+                            type: 'pool_full',
+                            reason: '客户私海保有量已满',
+                            companies: [
+                                { name: '企业A', count: Math.ceil(poolFailCount * 0.6) + '个客户' },
+                                { name: '企业B', count: Math.floor(poolFailCount * 0.4) + '个客户' }
+                            ]
+                        }]
+                    };
+                } else {
+                    // 新增到CRM或一键导入都成功
+                    resultData = {
+                        success: true,
+                        totalItems: currentCount,
+                        successItems: currentCount,
+                        failedItems: 0,
+                        itemType: '个客户',
+                        failures: []
+                    };
+                }
+            }
+            
+            updateResultDisplay(resultData);
+        }
+
+        // 更新结果显示
+        function updateResultDisplay(data) {
+            const resultHeader = document.getElementById('resultHeader');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultSummary = document.getElementById('resultSummary');
+            const resultActions = document.getElementById('resultActions');
+            
+            let operationText = '';
+            if (currentOperation === 'claim') operationText = '领取';
+            else if (currentOperation === 'crm') operationText = '新增到CRM';
+            else if (currentOperation === 'oneclick') operationText = '一键导入';
+            
+            if (data.success) {
+                // 完全成功
+                resultHeader.className = 'result-header success';
+                resultIcon.style.background = '#10b981';
+                resultIcon.innerHTML = '✓';
+                resultTitle.className = 'result-title success';
+                resultTitle.textContent = `${operationText}完成`;
+                resultSummary.className = 'result-summary success';
+                resultSummary.textContent = `您选中${data.totalItems}${data.itemType}${operationText}：全部${operationText}成功`;
+                document.getElementById('failureSection').style.display = 'none';
+                
+                // 只显示关闭按钮
+                resultActions.innerHTML = '<button class="btn btn-cancel" onclick="closeResult()">关闭</button>';
+            } else {
+                // 部分失败
+                resultHeader.className = 'result-header partial';
+                resultIcon.style.background = '#f59e0b';
+                resultIcon.innerHTML = '!';
+                resultTitle.className = 'result-title partial';
+                resultTitle.textContent = `${operationText}结果`;
+                resultSummary.className = 'result-summary partial';
+                resultSummary.textContent = `您选中${data.totalItems}${data.itemType}${operationText}：其中成功${data.successItems}${data.itemType}，有${data.failedItems}${data.itemType}${operationText}失败`;
+                
+                // 显示失败详情
+                document.getElementById('failureSection').style.display = 'block';
+                const failureGroups = document.getElementById('failureGroups');
+                failureGroups.innerHTML = '';
+                
+                data.failures.forEach(failure => {
+                    const totalFailedInGroup = failure.companies.reduce((sum, company) => {
+                        const count = typeof company.count === 'string' ? 
+                            parseInt(company.count.replace(/[^\d]/g, '')) : company.count;
+                        return sum + count;
+                    }, 0);
+                    
+                    const failureGroup = document.createElement('div');
+                    failureGroup.className = 'failure-group';
+                    
+                    const countUnit = data.itemType.includes('线索') ? '条线索' : '个客户';
+                    
+                    failureGroup.innerHTML = `
+                        <div class="failure-header">
+                            <div class="failure-summary">${failure.companies.length}家企业</div>
+                            <div class="failure-count">${totalFailedInGroup}${countUnit}</div>
+                        </div>
+                        <div class="failure-reason">
+                            <span>失败原因：${failure.reason}</span>
+                        </div>
+                        <div class="company-list">
+                            ${failure.companies.map(company => `
+                                <div class="company-item">
+                                    <div class="company-name">${company.name}</div>
+                                    <div class="company-count">${company.count}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    
+                    failureGroups.appendChild(failureGroup);
+                });
+                
+                resultActions.innerHTML = '<button class="btn btn-cancel" onclick="closeResult()">关闭</button>';
+            }
+        }
+
+        // 标签功能
+        document.getElementById('addTagBtn').addEventListener('click', function() {
+            document.getElementById('tagModal').style.display = 'block';
+        });
+
+        // 标签选择功能
+        document.querySelectorAll('.tag-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const category = this.closest('.tag-category');
+                const categoryTitle = category.querySelector('.tag-category-title').textContent.trim();
+                
+                // 检查是否为单选类别
+                if (categoryTitle.includes('（单选）')) {
+                    // 单选：清除同类别其他选中状态
+                    category.querySelectorAll('.tag-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                } else {
+                    // 多选：切换选中状态
+                    this.classList.toggle('selected');
+                }
+            });
+        });
+
+        // 确认标签选择
+        document.getElementById('confirmTagSelection').addEventListener('click', function() {
+            const selectedTags = document.querySelectorAll('.tag-option.selected');
+            const tagContainer = document.getElementById('tagContainer');
+            
+            // 添加新选中的标签（避免重复）
+            selectedTags.forEach(tag => {
+                const existingTags = Array.from(tagContainer.querySelectorAll('.tag span:first-child')).map(span => span.textContent);
+                if (!existingTags.includes(tag.textContent)) {
+                    const tagItem = document.createElement('div');
+                    tagItem.className = 'tag';
+                    tagItem.innerHTML = `
+                        <span>${tag.textContent}</span>
+                        <span class="remove" onclick="removeTag(this)">×</span>
+                    `;
+                    tagContainer.insertBefore(tagItem, document.getElementById('addTagBtn'));
+                }
+            });
+            
+            // 关闭弹窗
+            document.getElementById('tagModal').style.display = 'none';
+            
+            // 清除弹窗中的选中状态
+            selectedTags.forEach(tag => tag.classList.remove('selected'));
+        });
+
+        // 取消标签选择
+        document.getElementById('cancelTagSelection').addEventListener('click', function() {
+            document.getElementById('tagModal').style.display = 'none';
+            document.querySelectorAll('.tag-option.selected').forEach(tag => tag.classList.remove('selected'));
+        });
+
+        // 标签搜索功能
+        document.querySelector('.tag-search').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const tagOptions = document.querySelectorAll('.tag-option');
+            
+            tagOptions.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                const category = option.closest('.tag-category');
+                
+                if (text.includes(searchTerm)) {
+                    option.style.display = 'inline-block';
+                    category.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // 隐藏没有可见标签的分类
+            document.querySelectorAll('.tag-category').forEach(category => {
+                const visibleOptions = category.querySelectorAll('.tag-option[style*="inline-block"], .tag-option:not([style*="none"])');
+                if (searchTerm && visibleOptions.length === 0) {
+                    category.style.display = 'none';
+                } else {
+                    category.style.display = 'block';
+                }
+            });
+        });
+
+        // 结果页面功能
+        function closeResult() {
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+        }
+
+        function viewInCRM() {
+            alert('跳转到CRM查看结果');
+        }
+
+        // 点击外部关闭弹窗
+        document.addEventListener('click', function(e) {
+            // 关闭标签弹窗
+            const tagModal = document.getElementById('tagModal');
+            if (e.target === tagModal) {
+                tagModal.style.display = 'none';
+                document.querySelectorAll('.tag-option.selected').forEach(tag => tag.classList.remove('selected'));
+            }
+        });
+
+        // 初始化
+        renderQuantityCards();
+        updateDisplay();
+        updateLocationSection();
+    </script>
+</body>
+</html>

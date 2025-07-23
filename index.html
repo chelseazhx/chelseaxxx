@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>线索批量操作</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .header {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .status-banner {
+            background: #fff7e6;
+            border: 1px solid #ffec99;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .status-banner .icon {
+            width: 20px;
+            height: 20px;
+            background: #faad14;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .status-info {
+            flex: 1;
+        }
+
+        .status-info .main-text {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .status-breakdown {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 4px;
+        }
+
+        .status-item .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .dot-green { background: #52c41a; }
+        .dot-blue { background: #1890ff; }
+        .dot-red { background: #f5222d; }
+
+        .section {
+            padding: 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-icon {
+            width: 4px;
+            height: 16px;
+            background: #1890ff;
+            border-radius: 2px;
+        }
+
+        .quantity-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .quantity-card {
+            background: #fafafa;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .quantity-card.selected {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .quantity-card.more {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #999;
+            min-width: 80px;
+        }
+
+        .quantity-card .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1890ff;
+            margin-bottom: 8px;
+        }
+
+        .quantity-card .label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .quantity-warning {
+            display: none;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #faad14;
+        }
+
+        .more-options {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 100;
+            min-width: 120px;
+        }
+
+        .more-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .more-option:last-child {
+            border-bottom: none;
+        }
+
+        .more-option:hover {
+            background: #f0f8ff;
+        }
+
+        .more-option-number {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1890ff;
+        }
+
+        .more-option-desc {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .type-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .type-card {
+            background: #fafafa;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .type-card.selected {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .type-main {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .type-sub {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .subject-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .subject-card {
+            background: #fafafa;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .subject-card.selected {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .location-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .location-card {
+            background: #fafafa;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .location-card.selected {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .location-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .permission-note {
+            margin-top: 8px;
+            color: #666;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e9ecef;
+            margin: 20px 0;
+        }
+
+        .tag-section {
+            background: #fff8e1;
+            border: 1px solid #ffb74d;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .tag-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .tag-count {
+            font-size: 14px;
+            color: #e65100;
+            font-weight: 600;
+        }
+
+        .tag-input-area {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 8px;
+            background: white;
+            min-height: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .tag {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            color: #1890ff;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag .remove {
+            cursor: pointer;
+            color: #999;
+            font-weight: bold;
+            margin-left: 4px;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .tag .remove:hover {
+            background: rgba(245, 34, 45, 0.1);
+            color: #f5222d;
+        }
+
+        .add-tag-btn {
+            background: #f0f8ff;
+            border: 1px dashed #1890ff;
+            color: #1890ff;
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-tag-btn:hover {
+            background: #e6f7ff;
+            border-color: #40a9ff;
+        }
+
+        .tag-guide {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .tag-guide a {
+            color: #1890ff;
+            text-decoration: none;
+        }
+
+        .tag-guide a:hover {
+            text-decoration: underline;
+        }
+
+        .contact-types {
+            margin-left: 24px;
+        }
+
+        .contact-group {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .contact-group-label {
+            font-size: 14px;
+            color: #666;
+            min-width: 80px;
+            margin-top: 4px;
+        }
+
+        .contact-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .filter-tag {
+            background: #f5f5f5;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .contact-source-input {
+            flex: 1;
+            max-width: 200px;
+            padding: 4px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 20px 24px;
+            background: #f8f9fa;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+
+        .btn-cancel {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-cancel:hover {
+            background: #e8e8e8;
+        }
+
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .tag-search {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            margin: 16px 0;
+        }
+
+        .tag-categories {
+            margin-bottom: 20px;
+        }
+
+        .tag-category {
+            margin-bottom: 16px;
+        }
+
+        .tag-category-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-category-icon {
+            width: 16px;
+            height: 16px;
+            background: #1890ff;
+            border-radius: 2px;
+        }
+
+        .tag-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag-option {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 16px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .tag-option:hover {
+            border-color: #1890ff;
+            background: #f0f8ff;
+        }
+
+        .tag-option.selected {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 16px;
+        }
+
+        .option-item {
+            margin-bottom: 24px;
+            padding: 16px;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .option-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .option-checkbox {
+            margin-right: 8px;
+        }
+
+        .option-label {
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>线索批量操作</h1>
+            <div class="status-banner">
+                <div class="icon">i</div>
+                <div class="status-info">
+                    <div class="main-text">您选中了 <strong id="selectedCount">50</strong> 个主体</div>
+                    <div class="status-breakdown">
+                        <div class="status-item">
+                            <div class="dot dot-green"></div>
+                            <span>可领取 <strong id="availableCount">15</strong>个</span>
+                        </div>
+                        <div class="status-item">
+                            <div class="dot dot-blue"></div>
+                            <span>可转CRM <strong id="crmCount">32</strong>个</span>
+                        </div>
+                        <div class="status-item">
+                            <div class="dot dot-red"></div>
+                            <span>无权限 <strong id="noPermissionTotal">3</strong>个</span>
+                            <div style="margin-left: 8px; font-size: 11px; color: #999;">
+                                （<span id="inPrivateCount">2</span>个在他人私海，<span id="unassignedCount">1</span>个在主管未被分配）
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 选择操作数量 -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-icon"></div>
+                选择操作数量
+            </div>
+            <div class="quantity-cards">
+                <div class="quantity-card selected" data-quantity="50">
+                    <div class="number">50</div>
+                    <div class="label">当前选中的主体</div>
+                </div>
+                <div class="quantity-card" data-quantity="500">
+                    <div class="number">500</div>
+                    <div class="label">筛选结果前500个</div>
+                    <div class="quantity-warning">⚠️ 超出可领取数量，建议选择转CRM操作</div>
+                </div>
+                <div class="quantity-card" data-quantity="1000">
+                    <div class="number">1000</div>
+                    <div class="label">筛选结果前1000个</div>
+                    <div class="quantity-warning">⚠️ 超出可领取数量，建议选择转CRM操作</div>
+                </div>
+                <div class="quantity-card more">
+                    <div>...</div>
+                    <div class="more-options">
+                        <div class="more-option" data-quantity="2000">
+                            <div class="more-option-number">2000</div>
+                            <div class="more-option-desc">筛选结果前2000个</div>
+                        </div>
+                        <div class="more-option" data-quantity="5000">
+                            <div class="more-option-number">5000</div>
+                            <div class="more-option-desc">筛选结果前5000个</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作类型 -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-icon"></div>
+                操作类型
+            </div>
+            <div class="type-section">
+                <div class="type-card selected" data-operation="claim">
+                    <div class="type-main">领取</div>
+                    <div class="type-sub" id="claimDesc">15个可领取</div>
+                </div>
+                <div class="type-card" data-operation="crm">
+                    <div class="type-main">转CRM</div>
+                    <div class="type-sub" id="crmDesc">32个可转入</div>
+                </div>
+                <div class="type-card" data-operation="oneclick">
+                    <div class="type-main">一键转入</div>
+                    <div class="type-sub">未解锁将直接解锁</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 添加主体类型 -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-icon"></div>
+                添加主体类型
+            </div>
+            <div class="subject-section">
+                <div class="subject-card selected">添加到线索</div>
+                <div class="subject-card">添加到客户、联系人</div>
+            </div>
+        </div>
+
+        <!-- CRM位置 -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-icon"></div>
+                CRM位置
+            </div>
+            <div class="location-section">
+                <div class="location-card selected">
+                    <div>添加给我</div>
+                </div>
+                <div class="location-card">
+                    <div>分配给他人</div>
+                </div>
+                <div class="location-card disabled">
+                    <div>添加到公海</div>
+                    <div class="permission-note" style="margin-top: 4px; font-size: 11px; color: #999;">
+                        您没有添加到公海权限
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 更多选项 -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-icon"></div>
+                更多选项
+            </div>
+            
+            <div class="option-item">
+                <div class="option-header">
+                    <input type="checkbox" id="addCrmCustomer" class="option-checkbox" checked>
+                    <label for="addCrmCustomer" class="option-label">添加CRM客户标签</label>
+                </div>
+                <div class="tag-section">
+                    <div class="tag-input-area" id="tagContainer">
+                        <div class="tag" id="defaultTag">
+                            <span>未分配</span>
+                            <span class="remove" onclick="removeTag(this)">×</span>
+                        </div>
+                        <button class="add-tag-btn" id="addTagBtn">添加标签</button>
+                    </div>
+                    <div class="tag-guide">
+                        没有合适的标签？<a href="#" onclick="openTagManagement()">去增加/修改标签</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="option-item">
+                <div class="option-header">
+                    <input type="checkbox" id="phoneContact" class="option-checkbox">
+                    <label for="phoneContact" class="option-label">筛选联系方式类型</label>
+                </div>
+                
+                <div class="contact-types" style="margin-top: 12px;">
+                    <div class="contact-group">
+                        <span class="contact-group-label">号码类型：</span>
+                        <label class="contact-option">
+                            <input type="checkbox" checked> 手机
+                        </label>
+                        <label class="contact-option">
+                            <input type="checkbox" checked> 固话
+                        </label>
+                        <label class="contact-option">
+                            <input type="checkbox" checked> 邮箱
+                        </label>
+                    </div>
+                    
+                    <div class="contact-group">
+                        <span class="contact-group-label">号码过滤：</span>
+                        <div class="filter-tags">
+                            <span class="filter-tag">高职人员号码 ×</span>
+                            <span class="filter-tag">非本地区号码 ×</span>
+                            <span class="filter-tag">分机号 ×</span>
+                            <span class="filter-tag">低活跃度号码 ×</span>
+                            <span class="filter-tag">空号停机号码 ×</span>
+                            <span class="filter-tag">代理记账号码 ×</span>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-group">
+                        <span class="contact-group-label">号码来源：</span>
+                        <input type="text" class="contact-source-input" placeholder="请输入来源名称">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-cancel">取消</button>
+            <button class="btn btn-primary" id="confirmBtn">确认操作</button>
+        </div>
+    </div>
+
+    <!-- 标签选择弹窗 -->
+    <div class="modal" id="tagModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">选择标签</div>
+                <input type="text" class="tag-search" placeholder="探访条统到期时间（单选）" />
+            </div>
+            
+            <div class="tag-categories">
+                <div class="tag-category">
+                    <div class="tag-category-title">
+                        <div class="tag-category-icon"></div>
+                        已分配
+                    </div>
+                    <div class="tag-options">
+                        <div class="tag-option">未分配</div>
+                        <div class="tag-option">来分配</div>
+                        <div class="tag-option">11111</div>
+                        <div class="tag-option">标签</div>
+                        <div class="tag-option">22222</div>
+                        <div class="tag-option">已添加信</div>
+                        <div class="tag-option">微信通过</div>
+                    </div>
+                </div>
+                
+                <div class="tag-category">
+                    <div class="tag-category-title">
+                        <div class="tag-category-icon"></div>
+                        园区招商（单选）
+                    </div>
+                    <div class="tag-options">
+                        <div class="tag-option">刺期</div>
+                        <div class="tag-option">文化产业</div>
+                        <div class="tag-option">无特定</div>
+                        <div class="tag-option">500平</div>
+                    </div>
+                </div>
+                
+                <div class="tag-category">
+                    <div class="tag-category-title">
+                        <div class="tag-category-icon"></div>
+                        业务分类（多选）
+                    </div>
+                    <div class="tag-options">
+                        <div class="tag-option">商标</div>
+                        <div class="tag-option">专利</div>
+                        <div class="tag-option">政府项目</div>
+                        <div class="tag-option">认证</div>
+                        <div class="tag-option">财税</div>
+                        <div class="tag-option">知产维权</div>
+                        <div class="tag-option">知产转让</div>
+                        <div class="tag-option">高企新办</div>
+                        <div class="tag-option">创小申请</div>
+                        <div class="tag-option">专精特新</div>
+                    </div>
+                </div>
+                
+                <div class="tag-category">
+                    <div class="tag-category-title">
+                        <div class="tag-category-icon"></div>
+                        客户质量的类别（单选）
+                    </div>
+                    <div class="tag-options">
+                        <div class="tag-option">机包箱</div>
+                        <div class="tag-option">预印纸箱</div>
+                        <div class="tag-option">适合1#机生产的纸箱</div>
+                        <div class="tag-option">其他纸箱</div>
+                    </div>
+                </div>
+                
+                <div class="tag-category">
+                    <div class="tag-category-title">
+                        <div class="tag-category-icon"></div>
+                        付款及时（单选）
+                    </div>
+                    <div class="tag-options">
+                        <div class="tag-option">预付款</div>
+                        <div class="tag-option">月结30天以内</div>
+                        <div class="tag-option">月结30-60天</div>
+                        <div class="tag-option">大于月结60-90天</div>
+                    </div>
+                </div>
+                
+                <div class="tag-category">
+                    <div class="tag-category-title">
+                        <div class="tag-category-icon"></div>
+                        外贸质（多选）
+                    </div>
+                    <div class="tag-options">
+                        <div class="tag-option">A类客户</div>
+                        <div class="tag-option">B类客户</div>
+                        <div class="tag-option">C类客户</div>
+                        <div class="tag-option">2357</div>
+                        <div class="tag-option">俄罗斯</div>
+                        <div class="tag-option">白俄罗斯</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-cancel" id="cancelTagSelection">取消</button>
+                <button class="btn btn-primary" id="confirmTagSelection">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务创建表单 -->
+    <div class="container task-form" id="taskForm" style="display: none;">
+        <div class="header">
+            <h1>创建批量操作任务</h1>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">
+                <div class="section-icon"></div>
+                任务信息
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">任务名称</label>
+                <input type="text" id="taskName" style="width: 100%; padding: 12px; border: 1px solid #e8e8e8; border-radius: 6px; font-size: 14px;" placeholder="批量添加CRM - 2025/07/14">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">任务描述</label>
+                <textarea id="taskDesc" style="width: 100%; height: 80px; padding: 12px; border: 1px solid #e8e8e8; border-radius: 6px; font-size: 14px; resize: vertical;" placeholder="基于高筛条件组筛选结果，批量添加线索到CRM"></textarea>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">操作数量</label>
+                <input type="text" id="taskQuantity" readonly style="width: 100%; padding: 12px; border: 1px solid #e8e8e8; border-radius: 6px; font-size: 14px; background: #f5f5f5;">
+                <div style="background: #f0f8ff; border: 1px solid #e6f7ff; border-radius: 6px; padding: 12px; margin-top: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 14px;">
+                        <span>预计处理时间：</span>
+                        <span id="estimatedTime">20分钟</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 14px;">
+                        <span>建议预留时间：</span>
+                        <span id="suggestedTime">25分钟</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                        <span>今日剩余时间：</span>
+                        <span id="remainingTime">充足</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">操作完成日期</label>
+                <input type="date" id="completionDate" style="width: 100%; padding: 12px; border: 1px solid #e8e8e8; border-radius: 6px; font-size: 14px;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">确认条件组</label>
+                <div style="background: #f9f9f9; border: 1px solid #e8e8e8; border-radius: 6px; padding: 12px; font-size: 14px; color: #666; max-height: 100px; overflow-y: auto;" id="conditionsPreview">
+                    有效手机号码：有<br>
+                    商业状态：等于任一 - 商业<br>
+                    许可文件名称：文本包含任一 - 食品经营许可<br>
+                    满足下列：任意<br>
+                    经营范围：文本包含任一 - 食品配送<br>
+                    许可内容：等于任一 - 普通货物运输<br>
+                    所属行业：文本包含任一 - 农、林、牧、渔业文本包含任一 - 食品、饮料及烟草制品业
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-cancel" id="backToMain">返回</button>
+            <button class="btn btn-primary" id="submitTask">创建任务</button>
+        </div>
+    </div>
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">建议创建批量任务</div>
+            </div>
+            <div class="modal-body">
+                <p>您选择了 <span style="color: #1890ff; font-weight: 600;" id="taskSelectedCount">500</span> 个主体进行批量操作</p>
+                <p>为确保处理稳定性和效率，建议创建批量任务：</p>
+                <ul style="margin: 12px 0 12px 20px; line-height: 1.8;">
+                    <li>✓ 后台稳定处理，避免页面卡顿</li>
+                    <li>✓ 实时查看处理进度</li>
+                    <li>✓ 支持任务暂停和恢复</li>
+                    <li>✓ 处理完成后自动通知</li>
+                </ul>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" id="cancelTask">直接处理</button>
+                <button class="btn btn-primary" id="createTask">创建任务</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局函数：删除标签
+        function removeTag(element) {
+            element.parentElement.remove();
+        }
+
+        // 更新数据显示和按钮文本
+        function updateDataDisplay(selectedQuantity) {
+            // 模拟数据：基于选择数量计算各状态数量
+            const totalFiltered = 50000; // 总筛选结果
+            const actualQuantity = Math.min(selectedQuantity, totalFiltered);
+            
+            // 计算各状态数量（按比例）
+            const availableCount = Math.round(actualQuantity * 0.30); // 可领取
+            const crmCount = Math.round(actualQuantity * 0.64); // 可转CRM
+            const inPrivateCount = Math.round(actualQuantity * 0.04); // 在他人私海
+            const unassignedCount = actualQuantity - availableCount - crmCount - inPrivateCount; // 在主管未被分配
+            const noPermissionTotal = inPrivateCount + unassignedCount;
+            
+            // 更新显示
+            document.getElementById('selectedCount').textContent = actualQuantity;
+            document.getElementById('availableCount').textContent = availableCount;
+            document.getElementById('crmCount').textContent = crmCount;
+            document.getElementById('noPermissionTotal').textContent = noPermissionTotal;
+            document.getElementById('inPrivateCount').textContent = inPrivateCount;
+            document.getElementById('unassignedCount').textContent = unassignedCount;
+            
+            // 更新操作类型按钮文本
+            document.getElementById('claimDesc').textContent = `${availableCount}个可领取`;
+            document.getElementById('crmDesc').textContent = `${crmCount}个可转入`;
+            
+            // 更新确认按钮文本
+            updateConfirmButton();
+            
+            // 更新警告信息显示
+            updateQuantityWarnings();
+            
+        // 显示/隐藏警告信息（只在选择领取操作时显示）
+        function updateQuantityWarnings() {
+            const selectedOperation = document.querySelector('.type-card.selected');
+            const warnings = document.querySelectorAll('.quantity-warning');
+            
+            warnings.forEach(warning => {
+                const parent = warning.closest('.quantity-card, .more-option');
+                if (parent) {
+                    const optionQuantity = parseInt(parent.dataset?.quantity);
+                    const availableCount = parseInt(document.getElementById('availableCount').textContent);
+                    
+                    // 只在选择"领取"操作且数量超出可领取数量时显示警告
+                    if (selectedOperation && selectedOperation.dataset.operation === 'claim' && 
+                        optionQuantity && optionQuantity > availableCount) {
+                        warning.style.display = 'block';
+                        
+                        // 根据数量显示不同的警告文案
+                        if (optionQuantity >= 2000) {
+                            warning.textContent = '⚠️ 建议选择一键转入';
+                        } else {
+                            warning.textContent = '⚠️ 超出可领取数量，建议选择转CRM操作';
+                        }
+                    } else {
+                        warning.style.display = 'none';
+                    }
+                }
+            });
+        }
+        }
+
+        // 更新确认按钮文本
+        function updateConfirmButton() {
+            const selectedOperation = document.querySelector('.type-card.selected');
+            const selectedQuantity = document.getElementById('selectedCount').textContent;
+            const btn = document.getElementById('confirmBtn');
+            
+            if (selectedOperation) {
+                const operation = selectedOperation.dataset.operation;
+                const operationText = selectedOperation.querySelector('.type-main').textContent;
+                
+                if (operation === 'claim') {
+                    const count = document.getElementById('availableCount').textContent;
+                    btn.textContent = `${operationText} (${count}个)`;
+                } else if (operation === 'crm') {
+                    const count = document.getElementById('crmCount').textContent;
+                    btn.textContent = `${operationText} (${count}个)`;
+                } else if (operation === 'oneclick') {
+                    btn.textContent = `${operationText} (${selectedQuantity}个)`;
+                }
+            }
+        }
+
+        // 数量选择逻辑
+        document.querySelectorAll('.quantity-card').forEach(card => {
+            if (!card.classList.contains('more')) {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('.quantity-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    
+                    const quantity = parseInt(this.dataset.quantity);
+                    updateDataDisplay(quantity);
+                    
+                    // 如果选择500以上，显示任务创建提示
+                    if (quantity >= 500) {
+                        document.getElementById('taskSelectedCount').textContent = quantity;
+                        document.getElementById('taskModal').style.display = 'block';
+                    }
+                });
+            }
+        });
+
+        // 更多选项逻辑
+        document.querySelector('.quantity-card.more').addEventListener('click', function() {
+            const moreOptions = this.querySelector('.more-options');
+            moreOptions.style.display = moreOptions.style.display === 'block' ? 'none' : 'block';
+        });
+
+
+
+        // 操作类型选择逻辑
+        document.querySelectorAll('.type-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                updateConfirmButton();
+                updateQuantityWarnings(); // 更新警告信息
+            });
+        });
+
+        // 其他选项选择逻辑
+        document.querySelectorAll('.subject-card, .location-card').forEach(card => {
+            if (!card.classList.contains('disabled')) {
+                card.addEventListener('click', function() {
+                    this.parentElement.querySelectorAll('.subject-card, .location-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            }
+        });
+
+        // 确认按钮点击事件
+        document.getElementById('confirmBtn').addEventListener('click', function() {
+            const selectedOperation = document.querySelector('.type-card.selected');
+            const selectedQuantity = parseInt(document.getElementById('selectedCount').textContent);
+            
+            if (selectedOperation) {
+                const operation = selectedOperation.dataset.operation;
+                const operationText = selectedOperation.querySelector('.type-main').textContent;
+                
+                let actualCount = selectedQuantity;
+                if (operation === 'claim') {
+                    actualCount = parseInt(document.getElementById('availableCount').textContent);
+                } else if (operation === 'crm') {
+                    actualCount = parseInt(document.getElementById('crmCount').textContent);
+                }
+                
+                if (actualCount > 500) {
+                    // 显示任务创建提示
+                    document.getElementById('taskSelectedCount').textContent = actualCount;
+                    document.getElementById('taskModal').style.display = 'block';
+                } else {
+                    // 直接处理
+                    alert(`开始${operationText} ${actualCount} 个线索`);
+                }
+            }
+        });
+
+        // 添加CRM客户标签功能
+        document.getElementById('addCrmCustomer').addEventListener('change', function() {
+            const tagContainer = document.getElementById('tagContainer').parentElement;
+            if (this.checked) {
+                tagContainer.style.display = 'block';
+            } else {
+                tagContainer.style.display = 'none';
+            }
+        });
+
+        // 添加标签按钮
+        document.getElementById('addTagBtn').addEventListener('click', function() {
+            document.getElementById('tagModal').style.display = 'block';
+        });
+
+        // 标签选择功能
+        document.querySelectorAll('.tag-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const category = this.closest('.tag-category');
+                const categoryTitle = category.querySelector('.tag-category-title').textContent.trim();
+                
+                // 检查是否为单选类别
+                if (categoryTitle.includes('（单选）')) {
+                    // 单选：清除同类别其他选中状态
+                    category.querySelectorAll('.tag-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                } else {
+                    // 多选：切换选中状态
+                    this.classList.toggle('selected');
+                }
+            });
+        });
+
+        // 确认标签选择
+        document.getElementById('confirmTagSelection').addEventListener('click', function() {
+            const selectedTags = document.querySelectorAll('.tag-option.selected');
+            const tagContainer = document.getElementById('tagContainer');
+            
+            // 添加新选中的标签
+            selectedTags.forEach(tag => {
+                const tagItem = document.createElement('div');
+                tagItem.className = 'tag';
+                tagItem.innerHTML = `
+                    <span>${tag.textContent}</span>
+                    <span class="remove" onclick="removeTag(this)">×</span>
+                `;
+                
+                tagContainer.insertBefore(tagItem, document.getElementById('addTagBtn'));
+            });
+            
+            // 关闭弹窗
+            document.getElementById('tagModal').style.display = 'none';
+            
+            // 清除弹窗中的选中状态
+            selectedTags.forEach(tag => tag.classList.remove('selected'));
+        });
+
+        // 取消标签选择
+        document.getElementById('cancelTagSelection').addEventListener('click', function() {
+            document.getElementById('tagModal').style.display = 'none';
+            // 清除弹窗中的选中状态
+            document.querySelectorAll('.tag-option.selected').forEach(tag => tag.classList.remove('selected'));
+        });
+
+        // 标签搜索功能
+        document.querySelector('.tag-search').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const tagOptions = document.querySelectorAll('.tag-option');
+            
+            tagOptions.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                const category = option.closest('.tag-category');
+                
+                if (text.includes(searchTerm)) {
+                    option.style.display = 'inline-block';
+                    category.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // 隐藏没有可见标签的分类
+            document.querySelectorAll('.tag-category').forEach(category => {
+                const visibleOptions = category.querySelectorAll('.tag-option[style="display: inline-block"], .tag-option:not([style*="display: none"])');
+                if (searchTerm && visibleOptions.length === 0) {
+                    category.style.display = 'none';
+                } else {
+                    category.style.display = 'block';
+                }
+            });
+        });
+
+        // 任务创建弹窗逻辑
+        document.getElementById('cancelTask').addEventListener('click', function() {
+            document.getElementById('taskModal').style.display = 'none';
+        });
+
+        document.getElementById('createTask').addEventListener('click', function() {
+            document.getElementById('taskModal').style.display = 'none';
+            
+            // 显示任务创建表单
+            document.querySelector('.container:first-child').style.display = 'none';
+            document.getElementById('taskForm').style.display = 'block';
+            
+            // 填充表单数据
+            const quantity = document.getElementById('taskSelectedCount').textContent;
+            const today = new Date().toISOString().split('T')[0];
+            
+            document.getElementById('taskName').value = `批量添加CRM - ${new Date().toLocaleDateString()}`;
+            document.getElementById('taskDesc').value = '基于高筛条件组筛选结果，批量添加线索到CRM';
+            document.getElementById('taskQuantity').value = `${quantity} 个主体`;
+            document.getElementById('completionDate').value = today;
+            
+            // 计算时间
+            const estimatedMinutes = Math.ceil(quantity / 500) * 20;
+            const suggestedMinutes = Math.ceil(estimatedMinutes * 1.25);
+            
+            document.getElementById('estimatedTime').textContent = `${estimatedMinutes}分钟`;
+            document.getElementById('suggestedTime').textContent = `${suggestedMinutes}分钟`;
+            
+            // 检查今日剩余时间
+            const currentHour = new Date().getHours();
+            const remainingHours = 18 - currentHour; // 假设18点下班
+            const remainingMinutes = remainingHours * 60;
+            
+            if (suggestedMinutes > remainingMinutes) {
+                document.getElementById('remainingTime').textContent = '时间不足，建议分批处理';
+                document.getElementById('remainingTime').style.color = '#f5222d';
+            } else {
+                document.getElementById('remainingTime').textContent = '充足';
+                document.getElementById('remainingTime').style.color = '#52c41a';
+            }
+        });
+
+        // 返回主界面
+        document.getElementById('backToMain').addEventListener('click', function() {
+            document.getElementById('taskForm').style.display = 'none';
+            document.querySelector('.container:first-child').style.display = 'block';
+        });
+
+        // 提交任务
+        document.getElementById('submitTask').addEventListener('click', function() {
+            alert('任务创建成功！已添加到任务中心，您可以在任务中心查看处理进度。');
+            // 这里可以添加实际的任务创建逻辑
+        });
+
+        // 点击弹窗外部关闭弹窗
+        document.addEventListener('click', function(e) {
+            const tagModal = document.getElementById('tagModal');
+            const taskModal = document.getElementById('taskModal');
+            
+            if (e.target === tagModal) {
+                tagModal.style.display = 'none';
+                document.querySelectorAll('.tag-option.selected').forEach(tag => tag.classList.remove('selected'));
+            }
+            
+            if (e.target === taskModal) {
+                taskModal.style.display = 'none';
+            }
+            
+            // 关闭更多选项下拉
+            if (!e.target.closest('.quantity-card.more')) {
+                const moreOptions = document.querySelector('.more-options');
+                if (moreOptions) {
+                    moreOptions.style.display = 'none';
+                }
+            }
+        });
+
+        function openTagManagement() {
+            alert('跳转到标签管理页面');
+        }
+
+        // 初始化数据显示
+        updateDataDisplay(50);
+    </script>
+</body>
+</html>

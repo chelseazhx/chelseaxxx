@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加到CRM - 导入结果</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #fff;
+            padding: 20px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .header h2 {
+            color: #2c3e50;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .summary-section {
+            background: #fff5e6;
+            padding: 15px 20px;
+            border: 1px solid #ffd699;
+            margin: 20px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .warning-icon {
+            color: #ff9800;
+            font-size: 16px;
+        }
+
+        .summary-text {
+            color: #e65100;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .download-btn {
+            padding: 6px 12px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .failure-group {
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .group-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .group-title {
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .group-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .group-btn {
+            padding: 4px 8px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 3px;
+        }
+
+        .group-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: #fafafa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 13px;
+            color: #666;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .company-name {
+            color: #333;
+            max-width: 200px;
+        }
+
+        .contact-info {
+            color: #666;
+            font-family: monospace;
+        }
+
+        .error-message {
+            color: #ff4d4f;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border: 1px solid #1890ff;
+            background: white;
+            color: #1890ff;
+            cursor: pointer;
+            font-size: 11px;
+            border-radius: 3px;
+            margin: 1px;
+        }
+
+        .action-btn:hover {
+            background: #f0f8ff;
+        }
+
+        .fold-row {
+            background: #f9f9f9;
+        }
+
+        .download-link {
+            color: #1890ff;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .download-link:hover {
+            color: #40a9ff;
+        }
+
+        .fold-symbol {
+            color: #1890ff;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: center;
+            padding: 8px;
+        }
+
+        .fold-symbol:hover {
+            background: #f0f8ff;
+        }
+
+        .no-action {
+            color: #ccc;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>添加到CRM</h2>
+        </div>
+
+        <div class="summary-section">
+            <span class="warning-icon">⚠</span>
+            <span class="summary-text">未添加 50 条异常</span>
+        </div>
+
+        <div class="content">
+            <!-- 管理员权限CRM功能问题 -->
+            <div class="failure-group">
+                <div class="group-header">
+                    <div class="group-title">添加50条结果失败，共有6种失败类型</div>
+                    <div class="group-actions">
+                        <a href="#" class="download-link">下载完整异常报告>></a>
+                    </div>
+                </div>
+                <div class="group-content">
+                    <div class="group-header" style="background:#fff; border-bottom: 1px solid #f0f0f0;">
+                        <div class="group-title">失败类型一：管理员权限问题 客户数量12条</div>
+                        <div class="group-actions">
+                            <button class="group-btn">继续新添加</button>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">序号</th>
+                                <th style="width: 250px;">主体名称</th>
+                                <th style="width: 120px;">联系方式</th>
+                                <th>异常情况</th>
+                                <th style="width: 120px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td class="company-name">康威（江苏）机械制造有限公司</td>
+                                <td class="contact-info">188****9854</td>
+                                <td class="error-message">管理员权限CRM功能，全部线索不可导入，请重新添加</td>
+                                <td>
+                                    <button class="action-btn">重新添加</button>
+                                </td>
+                            </tr>
+                            <tr class="fold-row">
+                                <td colspan="5">
+                                    <div class="fold-symbol">▼</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 其他系统网络异常 -->
+            <div class="failure-group">
+                <div class="group-header" style="background:#fff; border-bottom: 1px solid #f0f0f0;">
+                    <div class="group-title">失败类型二：系统网络异常 客户数量8条</div>
+                    <div class="group-actions">
+                        <button class="group-btn">重新添加</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">序号</th>
+                            <th style="width: 250px;">主体名称</th>
+                            <th style="width: 120px;">联系方式</th>
+                            <th>异常情况</th>
+                            <th style="width: 120px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td class="company-name">宁波华能机械制造有限公司</td>
+                            <td class="contact-info">132****0671</td>
+                            <td class="error-message">其他系统网络异常，请重试或联系界面管理员</td>
+                            <td>
+                                <button class="action-btn">重新添加</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td class="company-name">山头市华峰数控设备营销有限公司</td>
+                            <td class="contact-info">0571-88965432</td>
+                            <td class="error-message">客户端网络不稳定，请重试</td>
+                            <td>
+                                <button class="action-btn">重试</button>
+                            </td>
+                        </tr>
+                        <tr class="fold-row">
+                            <td colspan="5">
+                                <div class="fold-symbol">▼</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 不符合格式要求 -->
+            <div class="failure-group">
+                <div class="group-header" style="background:#fff; border-bottom: 1px solid #f0f0f0;">
+                    <div class="group-title">失败类型三：格式要求错误 客户数量15条</div>
+                    <div class="group-actions">
+                        <button class="group-btn">修改异常</button>
+                        <button class="group-btn">丢弃线索</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">序号</th>
+                            <th style="width: 250px;">主体名称</th>
+                            <th style="width: 120px;">联系方式</th>
+                            <th>异常情况</th>
+                            <th style="width: 120px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td class="company-name">福建鑫动机械制造业有限公司</td>
+                            <td class="contact-info">abc123@email</td>
+                            <td class="error-message">不符合格式要求：邮箱格式错误</td>
+                            <td>
+                                <button class="action-btn">修改异常</button>
+                                <button class="action-btn">丢弃线索</button>
+                            </td>
+                        </tr>
+                        <tr class="fold-row">
+                            <td colspan="5">
+                                <div class="fold-symbol">▼</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 不符合导入规则 -->
+            <div class="failure-group">
+                <div class="group-header" style="background:#fff; border-bottom: 1px solid #f0f0f0;">
+                    <div class="group-title">失败类型四：不符合导入规则 客户数量5条</div>
+                    <div class="group-actions">
+                        <button class="group-btn" style="background: #f5f5f5; color: #ccc; cursor: not-allowed;">修改导入规则</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">序号</th>
+                            <th style="width: 250px;">主体名称</th>
+                            <th style="width: 120px;">联系方式</th>
+                            <th>异常情况</th>
+                            <th style="width: 120px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td class="company-name">钢特鑫动机械制造有限公司</td>
+                            <td class="contact-info">400-800-9999</td>
+                            <td class="error-message">企业规模超过限制 不符合导入规则</td>
+                            <td>
+                                <button class="action-btn" style="background: #f5f5f5; color: #ccc; cursor: not-allowed;">修改导入规则</button>
+                            </td>
+                        </tr>
+                        <tr class="fold-row">
+                            <td colspan="5">
+                                <div class="fold-symbol">▼</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 缺少必填信息 -->
+            <div class="failure-group">
+                <div class="group-header" style="background:#fff; border-bottom: 1px solid #f0f0f0;">
+                    <div class="group-title">失败类型五：缺少必填信息 客户数量7条【修改必填信息】</div>
+                    <div class="group-actions">
+                        <button class="group-btn">修改必填信息</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">序号</th>
+                            <th style="width: 250px;">主体名称</th>
+                            <th style="width: 120px;">联系方式</th>
+                            <th>异常情况</th>
+                            <th style="width: 120px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td class="company-name">铁特鑫动机械制造有限公司</td>
+                            <td class="contact-info">---</td>
+                            <td class="error-message">缺少必填信息：联系人姓名、企业地址</td>
+                            <td>
+                                <button class="action-btn">修改必填信息</button>
+                            </td>
+                        </tr>
+                        <tr class="fold-row">
+                            <td colspan="5">
+                                <div class="fold-symbol">▼</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 无权限问题 -->
+            <div class="failure-group">
+                <div class="group-header" style="background:#fff; border-bottom: 1px solid #f0f0f0;">
+                    <div class="group-title">失败类型六：权限限制 客户数量3条【无可用操作】</div>
+                    <div class="group-actions">
+                        <span class="no-action">无可用操作</span>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">序号</th>
+                            <th style="width: 250px;">主体名称</th>
+                            <th style="width: 120px;">联系方式</th>
+                            <th>异常情况</th>
+                            <th style="width: 120px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td class="company-name">安徽省铜陵机械制造有限公司</td>
+                            <td class="contact-info">0562-2855678</td>
+                            <td class="error-message">您没有当前客户/线索所在位公海的领取权限</td>
+                            <td class="no-action">—</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td class="company-name">山东重工集团有限公司</td>
+                            <td class="contact-info">186****2456</td>
+                            <td class="error-message">公海规则限制：30天内不可重复领取相同线索</td>
+                            <td class="no-action">—</td>
+                        </tr>
+                        <tr class="fold-row">
+                            <td colspan="5">
+                                <div class="fold-symbol">▼</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 折叠展开功能
+        document.querySelectorAll('.fold-text').forEach(foldBtn => {
+            foldBtn.addEventListener('click', function() {
+                if (this.textContent === '只展示前三条，剩下折叠') {
+                    this.textContent = '收起详情';
+                    // 这里可以添加展开更多行的逻辑
+                } else {
+                    this.textContent = '只展示前三条，剩下折叠';
+                    // 这里可以添加收起的逻辑
+                }
+            });
+        });
+
+        // 操作按钮点击事件
+        document.querySelectorAll('.action-btn, .group-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                alert('点击了：' + this.textContent);
+            });
+        });
+
+        // 下载按钮
+        document.querySelector('.download-btn').addEventListener('click', function() {
+            alert('开始下载异常报告...');
+        });
+    </script>
+</body>
+</html>
